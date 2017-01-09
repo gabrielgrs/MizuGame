@@ -15,8 +15,6 @@ function create() {
 
     game.add.tileSprite(0, 0, 1920, 1920, 'background');
     
-    game.add.image(0, 0, 'diamond');
-
     game.world.setBounds(0, 0, 1920, 1920);
 
     game.physics.startSystem(Phaser.Physics.P2JS);
@@ -32,30 +30,36 @@ function create() {
     // FullScreen
     game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     game.input.onDown.add(gofull, this);
-
+    
+    
 }
 
 function gofull() {
 
-    if (game.scale.isFullScreen)
-    {
+    if (game.scale.isFullScreen)  {
         game.scale.stopFullScreen();
-    }
-    else
-    {
+    } else {
         game.scale.startFullScreen(false);
     }
-
 }
+
 
 function update() {
 
     player.body.setZeroVelocity();
 
+    charController();
+    
+    game.time.events.repeat(Phaser.Timer.SECOND * 2, 10, createDiamond, this);
+
+}
+
+function charController() {
     if (cursors.up.isDown)
     {
-        player.body.moveUp(300)
+        player.body.moveUp(300);
     }
+    
     else if (cursors.down.isDown)
     {
         player.body.moveDown(300);
@@ -68,13 +72,20 @@ function update() {
     else if (cursors.right.isDown)
     {
         player.body.moveRight(300);
-    }
+    }    
+}
 
+function createDiamond() {
+    var diamond = game.add.image(0, 0, 'diamond');
+    game.physics.enable(diamond, Phaser.Physics.ARCADE);
+
+    diamond.body.bounce.y = 0.9;
+    diamond.body.collideWorldBounds = true;
 }
 
 function render() {
 
     game.debug.cameraInfo(game.camera, 32, 32);
-    game.debug.spriteCoords(player, 32, 500);
+    // game.debug.spriteCoords(player, 32, 500);
 
 }
