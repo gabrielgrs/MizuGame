@@ -1,91 +1,90 @@
-var game = new Phaser.Game(1200, 900, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
 
-    game.load.image('background','assets/tests/debug-grid-1920x1920.png');
-    game.load.image('player','assets/sprites/kirito.png');
-    game.load.image('diamond', 'assets/sprites/diamond.png');
+    game.load.image('bullet', 'assets/sprites/shmup-bullet.png');
+    game.load.image('ship', 'assets/sprites/thrust_ship.png');
 
 }
 
-var player;
+var sprite;
+var weapon;
 var cursors;
+var fireButton;
 
 function create() {
 
-    game.add.tileSprite(0, 0, 1920, 1920, 'background');
+    //  Creates 30 bullets, using the 'bullet' graphic
+    weapon = game.add.weapon(30, 'bullet');
+
+    //  The bullet will be automatically killed when it leaves the world bounds
+    weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
+
+    //  The speed at which the bullet is fired
+    weapon.bulletSpeed = 600;
+
+    //  Speed-up the rate of fire, allowing them to shoot 1 bullet every 60ms
+    weapon.fireRate = 100;
+
+    sprite = this.add.sprite(400, 300, 'ship');
+
+    sprite.anchor.set(0.5);
+
+    game.physics.arcade.enable(sprite);
+
+    sprite.body.drag.set(70);
+    sprite.body.maxVelocity.set(200);
     
-    game.world.setBounds(0, 0, 1920, 1920);
-
-    game.physics.startSystem(Phaser.Physics.P2JS);
-
-    player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
-
-    game.physics.p2.enable(player);
-
-    cursors = game.input.keyboard.createCursorKeys();
-
-    game.camera.follow(player);
     
-    // FullScreen
-    game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
-    game.input.onDown.add(gofull, this);
+
+    //  Tell the Weapon to track the 'player' Sprite
+    //  With no offsets from the position
+    //  But the 'true' argument tells the weapon to track sprite rotation
+    weapon.trackSprite(sprite, 0, 0, true);
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    fireButton = this.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
     
-    
+    game.camera.follow(sprite);
+
 }
-
-function gofull() {
-
-    if (game.scale.isFullScreen)  {
-        game.scale.stopFullScreen();
-    } else {
-        game.scale.startFullScreen(false);
-    }
-}
-
 
 function update() {
 
-    player.body.setZeroVelocity();
-
-    charController();
-    
-    game.time.events.repeat(Phaser.Timer.SECOND * 2, 10, createDiamond, this);
-
-}
-
-function charController() {
     if (cursors.up.isDown)
     {
-        player.body.moveUp(300);
+        game.physics.arcade.accelerationFromRotation(sprite.rotation, 300, sprite.body.acceleration);
     }
-    
-    else if (cursors.down.isDown)
+    else
     {
-        player.body.moveDown(300);
+        sprite.body.acceleration.set(0);
     }
 
     if (cursors.left.isDown)
     {
-        player.body.velocity.x = -300;
+        sprite.body.angularVelocity = -300;
     }
     else if (cursors.right.isDown)
     {
-        player.body.moveRight(300);
-    }    
-}
+        sprite.body.angularVelocity = 300;
+    }
+    else
+    {
+        sprite.body.angularVelocity = 0;
+    }
 
-function createDiamond() {
-    var diamond = game.add.image(0, 0, 'diamond');
-    game.physics.enable(diamond, Phaser.Physics.ARCADE);
+    if (fireButton.isDown)
+    {
+        weapon.fire();
+    }
 
-    diamond.body.bounce.y = 0.9;
-    diamond.body.collideWorldBounds = true;
+    game.world.wrap(sprite, 16);
+
 }
 
 function render() {
 
-    game.debug.cameraInfo(game.camera, 32, 32);
-    // game.debug.spriteCoords(player, 32, 500);
+    weapon.debug();
 
 }
